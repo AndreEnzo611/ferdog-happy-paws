@@ -93,6 +93,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "FerDog House — Banho e Tosa em Maringá" },
+      { name: "description", content: "FerDog House Hub is a web application for a pet grooming business, managing appointments, client data, and services." },
+      { property: "og:description", content: "FerDog House Hub is a web application for a pet grooming business, managing appointments, client data, and services." },
+      { name: "twitter:description", content: "FerDog House Hub is a web application for a pet grooming business, managing appointments, client data, and services." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/9c84863d-e5cf-4b38-830f-c0365c7fce54/id-preview-a1c2cbd6--94a1579c-be22-4607-9a28-8b2ef2d60a9c.lovable.app-1782996303641.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/9c84863d-e5cf-4b38-830f-c0365c7fce54/id-preview-a1c2cbd6--94a1579c-be22-4607-9a28-8b2ef2d60a9c.lovable.app-1782996303641.png" },
     ],
     links: [
       {
