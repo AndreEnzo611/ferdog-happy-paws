@@ -14,16 +14,208 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          guest_name: string | null
+          guest_pet_name: string | null
+          guest_pet_size: Database["public"]["Enums"]["pet_size"] | null
+          guest_phone: string | null
+          id: string
+          notes: string | null
+          pet_id: string | null
+          scheduled_at: string
+          service_id: string
+          status: Database["public"]["Enums"]["appointment_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          guest_name?: string | null
+          guest_pet_name?: string | null
+          guest_pet_size?: Database["public"]["Enums"]["pet_size"] | null
+          guest_phone?: string | null
+          id?: string
+          notes?: string | null
+          pet_id?: string | null
+          scheduled_at: string
+          service_id: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          guest_name?: string | null
+          guest_pet_name?: string | null
+          guest_pet_size?: Database["public"]["Enums"]["pet_size"] | null
+          guest_phone?: string | null
+          id?: string
+          notes?: string | null
+          pet_id?: string | null
+          scheduled_at?: string
+          service_id?: string
+          status?: Database["public"]["Enums"]["appointment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_pet_id_fkey"
+            columns: ["pet_id"]
+            isOneToOne: false
+            referencedRelation: "pets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pets: {
+        Row: {
+          breed: string | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          owner_id: string
+          size: Database["public"]["Enums"]["pet_size"]
+          species: string
+          updated_at: string
+        }
+        Insert: {
+          breed?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          owner_id: string
+          size?: Database["public"]["Enums"]["pet_size"]
+          species?: string
+          updated_at?: string
+        }
+        Update: {
+          breed?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          owner_id?: string
+          size?: Database["public"]["Enums"]["pet_size"]
+          species?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          address: string | null
+          created_at: string
+          full_name: string
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          full_name: string
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          full_name?: string
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      services: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          name: string
+          price_cents: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          duration_minutes: number
+          id?: string
+          name: string
+          price_cents: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          name?: string
+          price_cents?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "staff" | "cliente"
+      appointment_status:
+        | "pendente"
+        | "confirmado"
+        | "em_andamento"
+        | "concluido"
+        | "cancelado"
+      pet_size: "pequeno" | "medio" | "grande" | "gigante"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +342,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "staff", "cliente"],
+      appointment_status: [
+        "pendente",
+        "confirmado",
+        "em_andamento",
+        "concluido",
+        "cancelado",
+      ],
+      pet_size: ["pequeno", "medio", "grande", "gigante"],
+    },
   },
 } as const
