@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AgendamentoRouteImport } from './routes/agendamento'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedMinhaContaRouteImport } from './routes/_authenticated/minha-conta'
 
@@ -24,15 +25,19 @@ const AgendamentoRoute = AgendamentoRouteImport.update({
   path: '/agendamento',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedMinhaContaRoute = AuthenticatedMinhaContaRouteImport.update({
-  id: '/_authenticated/minha-conta',
+  id: '/minha-conta',
   path: '/minha-conta',
-  getParentRoute: () => rootRouteImport,
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -50,6 +55,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/agendamento': typeof AgendamentoRoute
   '/auth': typeof AuthRoute
   '/_authenticated/minha-conta': typeof AuthenticatedMinhaContaRoute
@@ -62,6 +68,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/agendamento'
     | '/auth'
     | '/_authenticated/minha-conta'
@@ -69,9 +76,9 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AgendamentoRoute: typeof AgendamentoRoute
   AuthRoute: typeof AuthRoute
-  AuthenticatedMinhaContaRoute: typeof AuthenticatedMinhaContaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -90,6 +97,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgendamentoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -102,16 +116,27 @@ declare module '@tanstack/react-router' {
       path: '/minha-conta'
       fullPath: '/minha-conta'
       preLoaderRoute: typeof AuthenticatedMinhaContaRouteImport
-      parentRoute: typeof rootRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedMinhaContaRoute: typeof AuthenticatedMinhaContaRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedMinhaContaRoute: AuthenticatedMinhaContaRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AgendamentoRoute: AgendamentoRoute,
   AuthRoute: AuthRoute,
-  AuthenticatedMinhaContaRoute: AuthenticatedMinhaContaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
