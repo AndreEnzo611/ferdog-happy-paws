@@ -22,23 +22,25 @@ export type GuestAppointmentInput = z.infer<typeof guestAppointmentSchema>;
 
 export async function createGuestAppointment(input: GuestAppointmentInput) {
   const payload = guestAppointmentSchema.parse(input);
-  const { data, error } = await supabase
-    .from("appointments")
-    .insert({
-      customer_id: null,
-      service_id: payload.service_id,
-      guest_name: payload.guest_name,
-      guest_phone: payload.guest_phone,
-      guest_pet_name: payload.guest_pet_name,
-      guest_pet_size: payload.guest_pet_size,
-      scheduled_at: new Date(payload.scheduled_at).toISOString(),
-      notes: payload.notes || null,
-      status: "pendente",
-    })
-    .select("id")
-    .single();
+  // Se houver sessão ativa, o agendamento fica vinculado ao cliente logado.
+  const { data: sessionData } = await supabase.auth.getSession();
+  const customerId = sessionData.session?.user.id ?? null;
+
+  // Sem .select(): visitantes (anon) não têm permissão de leitura na tabela,
+  // e pedir a linha de volta faria o insert falhar com erro de RLS.
+  const { error } = await supabase.from("appointments").insert({
+    customer_id: customerId,
+    service_id: payload.service_id,
+    guest_name: payload.guest_name,
+    guest_phone: payload.guest_phone,
+    guest_pet_name: payload.guest_pet_name,
+    guest_pet_size: payload.guest_pet_size,
+    scheduled_at: new Date(payload.scheduled_at).toISOString(),
+    notes: payload.notes || null,
+    status: "pendente",
+  });
   if (error) throw error;
-  return data;
+  return { ok: true };
 }
 
 export async function listMyAppointments() {
