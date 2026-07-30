@@ -14,6 +14,7 @@ import { Route as AgendamentoRouteImport } from './routes/agendamento'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedMinhaContaRouteImport } from './routes/_authenticated/minha-conta'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -39,17 +40,24 @@ const AuthenticatedMinhaContaRoute = AuthenticatedMinhaContaRouteImport.update({
   path: '/minha-conta',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/agendamento': typeof AgendamentoRoute
   '/auth': typeof AuthRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/minha-conta': typeof AuthenticatedMinhaContaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/agendamento': typeof AgendamentoRoute
   '/auth': typeof AuthRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/minha-conta': typeof AuthenticatedMinhaContaRoute
 }
 export interface FileRoutesById {
@@ -58,19 +66,21 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/agendamento': typeof AgendamentoRoute
   '/auth': typeof AuthRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/minha-conta': typeof AuthenticatedMinhaContaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/agendamento' | '/auth' | '/minha-conta'
+  fullPaths: '/' | '/agendamento' | '/auth' | '/admin' | '/minha-conta'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/agendamento' | '/auth' | '/minha-conta'
+  to: '/' | '/agendamento' | '/auth' | '/admin' | '/minha-conta'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/agendamento'
     | '/auth'
+    | '/_authenticated/admin'
     | '/_authenticated/minha-conta'
   fileRoutesById: FileRoutesById
 }
@@ -118,14 +128,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMinhaContaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedMinhaContaRoute: typeof AuthenticatedMinhaContaRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedMinhaContaRoute: AuthenticatedMinhaContaRoute,
 }
 
@@ -141,13 +160,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
