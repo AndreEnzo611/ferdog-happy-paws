@@ -35,11 +35,17 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           {!loading && user ? (
             <>
+              {isStaff && (
+                <Button asChild variant="ghost" size="sm">
+                  <Link to="/admin">Painel</Link>
+                </Button>
+              )}
               <Button asChild variant="ghost" size="sm">
                 <Link to="/minha-conta">Minha conta</Link>
               </Button>
               <Button size="sm" variant="outline" onClick={() => signOut()}>Sair</Button>
             </>
+
           ) : (
             <>
               <Button asChild variant="ghost" size="sm">
