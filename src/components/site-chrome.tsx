@@ -1,12 +1,20 @@
 import { Link } from "@tanstack/react-router";
 import { PawPrint } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { signOut } from "@/services/auth";
+import { getMyRoles } from "@/services/admin";
 import { Button } from "@/components/ui/button";
 
 export function SiteHeader() {
   const { user, loading } = useAuth();
-  return (
+  const { data: roles } = useQuery({
+    queryKey: ["my-roles"],
+    queryFn: getMyRoles,
+    enabled: !!user,
+  });
+  const isStaff = !!roles?.some((r) => r === "admin" || r === "staff");
+
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2 font-bold text-lg">
