@@ -123,56 +123,77 @@ function AdminPage() {
               <StatCard label="Receita concluída" value={formatBRL(stats.receita)} />
             </div>
 
-            <div className="mt-8 flex items-center gap-3">
-              <span className="text-sm font-medium">Filtrar:</span>
-              <Select value={filter} onValueChange={setFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {STATUS.map((s) => (
-                    <SelectItem key={s} value={s}>
-                      {STATUS_LABEL[s]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  queryClient.invalidateQueries({ queryKey: ["appointments", "all"] })
-                }
-              >
-                Atualizar
-              </Button>
-            </div>
+            <Tabs defaultValue="agendamentos" className="mt-8">
+              <TabsList>
+                <TabsTrigger value="agendamentos">Agendamentos</TabsTrigger>
+                <TabsTrigger value="servicos">Serviços</TabsTrigger>
+                <TabsTrigger value="clientes">Clientes</TabsTrigger>
+              </TabsList>
 
-            <Card className="mt-4">
-              <CardHeader>
-                <CardTitle>Agendamentos</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <p className="text-sm text-muted-foreground">Carregando...</p>
-                ) : list.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Nenhum agendamento aqui.</p>
-                ) : (
-                  <ul className="divide-y divide-border">
-                    {list.map((a) => (
-                      <Row
-                        key={a.id}
-                        appointment={a}
-                        onStatus={(status) => mutation.mutate({ id: a.id, status })}
-                      />
-                    ))}
-                  </ul>
-                )}
-              </CardContent>
-            </Card>
+              <TabsContent value="agendamentos">
+                <div className="mt-4 flex items-center gap-3">
+                  <span className="text-sm font-medium">Filtrar:</span>
+                  <Select value={filter} onValueChange={setFilter}>
+                    <SelectTrigger className="w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todos">Todos</SelectItem>
+                      {STATUS.map((s) => (
+                        <SelectItem key={s} value={s}>
+                          {STATUS_LABEL[s]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      queryClient.invalidateQueries({ queryKey: ["appointments", "all"] })
+                    }
+                  >
+                    Atualizar
+                  </Button>
+                </div>
+
+                <Card className="mt-4">
+                  <CardHeader>
+                    <CardTitle>Agendamentos</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {isLoading ? (
+                      <p className="text-sm text-muted-foreground">Carregando...</p>
+                    ) : list.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
+                        Nenhum agendamento aqui.
+                      </p>
+                    ) : (
+                      <ul className="divide-y divide-border">
+                        {list.map((a) => (
+                          <Row
+                            key={a.id}
+                            appointment={a}
+                            onStatus={(status) => mutation.mutate({ id: a.id, status })}
+                          />
+                        ))}
+                      </ul>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="servicos" className="mt-4">
+                <ServicesEditor />
+              </TabsContent>
+
+              <TabsContent value="clientes" className="mt-4">
+                <ClientsEditor />
+              </TabsContent>
+            </Tabs>
           </>
         )}
+
       </main>
       <SiteFooter />
     </div>
