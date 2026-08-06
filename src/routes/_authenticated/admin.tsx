@@ -13,6 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ServicesEditor } from "@/components/admin/services-editor";
+import { ClientsEditor } from "@/components/admin/clients-editor";
 import {
   getMyRoles,
   listAllAppointments,
