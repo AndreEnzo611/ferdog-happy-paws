@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { signIn, signUp, signInWithGoogle } from "@/services/auth";
+import { signIn, signUp, signInWithGoogle, requestPasswordReset } from "@/services/auth";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -22,11 +22,13 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [info, setInfo] = useState<string | null>(null);
 
   async function handleSignIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     setBusy(true);
+    setInfo(null);
     try {
       await signIn({
         email: String(fd.get("email") ?? ""),
@@ -35,7 +37,9 @@ function AuthPage() {
       toast.success("Bem-vindo de volta!");
       navigate({ to: "/minha-conta" });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Não foi possível entrar");
+      const msg = err instanceof Error ? err.message : "Não foi possível entrar";
+      setInfo(msg);
+      toast.error(msg);
     } finally {
       setBusy(false);
     }
@@ -45,16 +49,42 @@ function AuthPage() {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     setBusy(true);
+    setInfo(null);
     try {
-      await signUp({
+      const { needsEmailConfirmation } = await signUp({
         full_name: String(fd.get("full_name") ?? ""),
         phone: String(fd.get("phone") ?? ""),
         email: String(fd.get("email") ?? ""),
         password: String(fd.get("password") ?? ""),
       });
-      toast.success("Conta criada! Você já pode entrar.");
+      if (needsEmailConfirmation) {
+        setInfo("Conta criada! Confirme seu email pelo link que enviamos e depois faça login.");
+        toast.success("Verifique seu email para confirmar a conta.");
+      } else {
+        toast.success("Conta criada! Você já está conectado.");
+        navigate({ to: "/minha-conta" });
+      }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Não foi possível cadastrar");
+      const msg = err instanceof Error ? err.message : "Não foi possível cadastrar";
+      setInfo(msg);
+      toast.error(msg);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleForgot(email: string) {
+    if (!email) {
+      toast.error("Digite seu email no campo acima primeiro");
+      return;
+    }
+    setBusy(true);
+    try {
+      await requestPasswordReset(email);
+      setInfo("Enviamos um link de redefinição de senha para o seu email.");
+      toast.success("Link de redefinição enviado!");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível enviar o link");
     } finally {
       setBusy(false);
     }
@@ -68,6 +98,7 @@ function AuthPage() {
       setBusy(false);
     }
   }
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -97,8 +128,24 @@ function AuthPage() {
                     <Label htmlFor="si-pass">Senha</Label>
                     <Input id="si-pass" name="password" type="password" required />
                   </div>
+                  {info && (
+                    <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">{info}</p>
+                  )}
                   <Button type="submit" className="w-full" disabled={busy}>Entrar</Button>
+                  <button
+                    type="button"
+                    className="w-full text-xs text-primary underline"
+                    disabled={busy}
+                    onClick={() =>
+                      handleForgot(
+                        (document.getElementById("si-email") as HTMLInputElement | null)?.value.trim() ?? "",
+                      )
+                    }
+                  >
+                    Esqueci minha senha
+                  </button>
                 </form>
+
               </TabsContent>
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4 pt-4">
