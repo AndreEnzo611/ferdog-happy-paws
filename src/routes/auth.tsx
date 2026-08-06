@@ -128,8 +128,24 @@ function AuthPage() {
                     <Label htmlFor="si-pass">Senha</Label>
                     <Input id="si-pass" name="password" type="password" required />
                   </div>
+                  {info && (
+                    <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">{info}</p>
+                  )}
                   <Button type="submit" className="w-full" disabled={busy}>Entrar</Button>
+                  <button
+                    type="button"
+                    className="w-full text-xs text-primary underline"
+                    disabled={busy}
+                    onClick={() =>
+                      handleForgot(
+                        (document.getElementById("si-email") as HTMLInputElement | null)?.value.trim() ?? "",
+                      )
+                    }
+                  >
+                    Esqueci minha senha
+                  </button>
                 </form>
+
               </TabsContent>
               <TabsContent value="signup">
                 <form onSubmit={handleSignUp} className="space-y-4 pt-4">
