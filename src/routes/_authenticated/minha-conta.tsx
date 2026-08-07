@@ -290,17 +290,64 @@ function AccountPage() {
                 onChange={(e) => setApptForm({ ...apptForm, guest_phone: e.target.value })}
               />
             </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="ap-date">Adiar para (data)</Label>
+                <Input
+                  id="ap-date"
+                  type="date"
+                  min={todayISODate()}
+                  value={apptForm.date}
+                  onChange={(e) => setApptForm({ ...apptForm, date: e.target.value })}
+                />
+                {apptForm.date && !isBusinessDay(apptForm.date) && (
+                  <p className="text-xs text-destructive">
+                    Atendemos de terça a sábado.
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Horário</Label>
+                <Select
+                  value={apptForm.time}
+                  onValueChange={(v) => setApptForm({ ...apptForm, time: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Escolha o horário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIME_SLOTS.map((slot) => (
+                      <SelectItem key={slot} value={slot}>
+                        {slot}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Para mudar data e hora, fale com a equipe pelo WhatsApp.
+              Ao adiar, o agendamento volta para “pendente” até a equipe confirmar.
             </p>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditing(null)}>
-              Cancelar
+          <DialogFooter className="gap-2 sm:justify-between">
+            <Button
+              variant="destructive"
+              onClick={() => cancelAppt.mutate(editing.id)}
+              disabled={cancelAppt.isPending}
+            >
+              <Trash2 className="mr-1 h-4 w-4" />
+              {cancelAppt.isPending ? "Cancelando..." : "Cancelar agendamento"}
             </Button>
-            <Button onClick={() => saveAppt.mutate()} disabled={saveAppt.isPending}>
-              {saveAppt.isPending ? "Salvando..." : "Salvar"}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setEditing(null)}>
+                Fechar
+              </Button>
+              <Button onClick={() => saveAppt.mutate()} disabled={saveAppt.isPending}>
+                {saveAppt.isPending ? "Salvando..." : "Salvar"}
+              </Button>
+            </div>
+          </DialogFooter>
+
           </DialogFooter>
         </DialogContent>
       </Dialog>
