@@ -95,10 +95,24 @@ function AccountPage() {
 
   /* ----- agendamento ----- */
   const [editing, setEditing] = useState<any | null>(null);
-  const [apptForm, setApptForm] = useState({ service_id: "", guest_phone: "" });
+  const [apptForm, setApptForm] = useState({
+    service_id: "",
+    guest_phone: "",
+    date: "",
+    time: "",
+  });
 
   const saveAppt = useMutation({
-    mutationFn: () => updateMyAppointment(editing.id, apptForm),
+    mutationFn: () => {
+      if (!isBusinessDay(apptForm.date)) {
+        throw new Error("Atendemos de terça a sábado. Escolha outra data.");
+      }
+      return updateMyAppointment(editing.id, {
+        service_id: apptForm.service_id,
+        guest_phone: apptForm.guest_phone,
+        scheduled_at: `${apptForm.date}T${apptForm.time}:00`,
+      });
+    },
     onSuccess: () => {
       toast.success("Agendamento atualizado");
       setEditing(null);
@@ -108,13 +122,27 @@ function AccountPage() {
       toast.error(e instanceof Error ? e.message : "Não foi possível salvar"),
   });
 
+  const cancelAppt = useMutation({
+    mutationFn: (id: string) => cancelMyAppointment(id),
+    onSuccess: () => {
+      toast.success("Agendamento cancelado");
+      setEditing(null);
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    },
+    onError: (e: unknown) =>
+      toast.error(e instanceof Error ? e.message : "Não foi possível cancelar"),
+  });
+
   function openEdit(a: any) {
     setEditing(a);
+    const dt = new Date(a.scheduled_at);
+    const pad = (n: number) => String(n).padStart(2, "0");
     setApptForm({
       service_id: a.service_id ?? "",
       guest_phone: a.guest_phone ?? profile?.phone ?? "",
-    });
-  }
+      date: `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`,
+      time: `${pad(dt.getHours())}:${pad(dt.getMinutes())}`,
+
 
   return (
     <div className="min-h-screen bg-background">
