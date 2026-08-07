@@ -29,11 +29,33 @@ import {
   getMyProfile,
   updateMyProfile,
   updateMyAppointment,
+  cancelMyAppointment,
   EDITABLE_STATUS,
   type MyProfileInput,
 } from "@/services/account";
 import { formatBRL, formatDuration, formatPhoneBR } from "@/lib/format";
 import { useAuth } from "@/hooks/useAuth";
+
+// Horário de funcionamento: terça a sábado, 8h às 18h — slots de 30 min
+const TIME_SLOTS: string[] = Array.from({ length: (18 - 8) * 2 }, (_, i) => {
+  const h = 8 + Math.floor(i / 2);
+  const m = i % 2 === 0 ? "00" : "30";
+  return `${String(h).padStart(2, "0")}:${m}`;
+});
+
+function todayISODate(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function isBusinessDay(dateStr: string): boolean {
+  if (!dateStr) return false;
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  const day = new Date(y, mo - 1, d).getDay();
+  return day >= 2 && day <= 6;
+}
+
 
 export const Route = createFileRoute("/_authenticated/minha-conta")({
   head: () => ({
