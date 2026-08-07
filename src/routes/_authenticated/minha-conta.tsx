@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Pencil } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,11 +29,33 @@ import {
   getMyProfile,
   updateMyProfile,
   updateMyAppointment,
+  cancelMyAppointment,
   EDITABLE_STATUS,
   type MyProfileInput,
 } from "@/services/account";
 import { formatBRL, formatDuration, formatPhoneBR } from "@/lib/format";
 import { useAuth } from "@/hooks/useAuth";
+
+// Horário de funcionamento: terça a sábado, 8h às 18h — slots de 30 min
+const TIME_SLOTS: string[] = Array.from({ length: (18 - 8) * 2 }, (_, i) => {
+  const h = 8 + Math.floor(i / 2);
+  const m = i % 2 === 0 ? "00" : "30";
+  return `${String(h).padStart(2, "0")}:${m}`;
+});
+
+function todayISODate(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function isBusinessDay(dateStr: string): boolean {
+  if (!dateStr) return false;
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  const day = new Date(y, mo - 1, d).getDay();
+  return day >= 2 && day <= 6;
+}
+
 
 export const Route = createFileRoute("/_authenticated/minha-conta")({
   head: () => ({
@@ -95,10 +117,24 @@ function AccountPage() {
 
   /* ----- agendamento ----- */
   const [editing, setEditing] = useState<any | null>(null);
-  const [apptForm, setApptForm] = useState({ service_id: "", guest_phone: "" });
+  const [apptForm, setApptForm] = useState({
+    service_id: "",
+    guest_phone: "",
+    date: "",
+    time: "",
+  });
 
   const saveAppt = useMutation({
-    mutationFn: () => updateMyAppointment(editing.id, apptForm),
+    mutationFn: () => {
+      if (!isBusinessDay(apptForm.date)) {
+        throw new Error("Atendemos de terça a sábado. Escolha outra data.");
+      }
+      return updateMyAppointment(editing.id, {
+        service_id: apptForm.service_id,
+        guest_phone: apptForm.guest_phone,
+        scheduled_at: `${apptForm.date}T${apptForm.time}:00`,
+      });
+    },
     onSuccess: () => {
       toast.success("Agendamento atualizado");
       setEditing(null);
@@ -108,13 +144,31 @@ function AccountPage() {
       toast.error(e instanceof Error ? e.message : "Não foi possível salvar"),
   });
 
+  const cancelAppt = useMutation({
+    mutationFn: (id: string) => cancelMyAppointment(id),
+    onSuccess: () => {
+      toast.success("Agendamento cancelado");
+      setEditing(null);
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    },
+    onError: (e: unknown) =>
+      toast.error(e instanceof Error ? e.message : "Não foi possível cancelar"),
+  });
+
   function openEdit(a: any) {
     setEditing(a);
+    const dt = new Date(a.scheduled_at);
+    const pad = (n: number) => String(n).padStart(2, "0");
     setApptForm({
       service_id: a.service_id ?? "",
       guest_phone: a.guest_phone ?? profile?.phone ?? "",
+      date: `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`,
+      time: `${pad(dt.getHours())}:${pad(dt.getMinutes())}`,
     });
   }
+
+
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -258,17 +312,62 @@ function AccountPage() {
                 onChange={(e) => setApptForm({ ...apptForm, guest_phone: e.target.value })}
               />
             </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="ap-date">Adiar para (data)</Label>
+                <Input
+                  id="ap-date"
+                  type="date"
+                  min={todayISODate()}
+                  value={apptForm.date}
+                  onChange={(e) => setApptForm({ ...apptForm, date: e.target.value })}
+                />
+                {apptForm.date && !isBusinessDay(apptForm.date) && (
+                  <p className="text-xs text-destructive">
+                    Atendemos de terça a sábado.
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Horário</Label>
+                <Select
+                  value={apptForm.time}
+                  onValueChange={(v) => setApptForm({ ...apptForm, time: v })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Escolha o horário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIME_SLOTS.map((slot) => (
+                      <SelectItem key={slot} value={slot}>
+                        {slot}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Para mudar data e hora, fale com a equipe pelo WhatsApp.
+              Ao adiar, o agendamento volta para “pendente” até a equipe confirmar.
             </p>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditing(null)}>
-              Cancelar
+          <DialogFooter className="gap-2 sm:justify-between">
+            <Button
+              variant="destructive"
+              onClick={() => cancelAppt.mutate(editing.id)}
+              disabled={cancelAppt.isPending}
+            >
+              <Trash2 className="mr-1 h-4 w-4" />
+              {cancelAppt.isPending ? "Cancelando..." : "Cancelar agendamento"}
             </Button>
-            <Button onClick={() => saveAppt.mutate()} disabled={saveAppt.isPending}>
-              {saveAppt.isPending ? "Salvando..." : "Salvar"}
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setEditing(null)}>
+                Fechar
+              </Button>
+              <Button onClick={() => saveAppt.mutate()} disabled={saveAppt.isPending}>
+                {saveAppt.isPending ? "Salvando..." : "Salvar"}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
