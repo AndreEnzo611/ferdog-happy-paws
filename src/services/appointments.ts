@@ -47,7 +47,7 @@ export async function listMyAppointments() {
   const { data, error } = await supabase
     .from("appointments")
     .select(
-      "id, scheduled_at, status, notes, service:services(name, price_cents, duration_minutes)"
+      "id, scheduled_at, status, notes, service_id, guest_phone, service:services(name, price_cents, duration_minutes)"
     )
     .order("scheduled_at", { ascending: false });
   if (error) throw error;
