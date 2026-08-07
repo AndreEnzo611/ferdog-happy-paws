@@ -142,6 +142,10 @@ function AccountPage() {
       guest_phone: a.guest_phone ?? profile?.phone ?? "",
       date: `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`,
       time: `${pad(dt.getHours())}:${pad(dt.getMinutes())}`,
+    });
+  }
+
+
 
 
   return (
