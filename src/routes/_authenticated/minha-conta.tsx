@@ -347,8 +347,6 @@ function AccountPage() {
               </Button>
             </div>
           </DialogFooter>
-
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
