@@ -51,6 +51,7 @@ export const EDITABLE_STATUS = ["pendente", "confirmado"] as const;
 export const myAppointmentSchema = z.object({
   service_id: z.string().uuid("Escolha o serviço"),
   guest_phone: z.string().trim().min(8, "Telefone inválido").max(20, "Telefone inválido"),
+  scheduled_at: z.string().min(1, "Escolha data e hora"),
 });
 
 export type MyAppointmentInput = z.infer<typeof myAppointmentSchema>;
@@ -59,7 +60,22 @@ export async function updateMyAppointment(id: string, input: MyAppointmentInput)
   const p = myAppointmentSchema.parse(input);
   const { error } = await supabase
     .from("appointments")
-    .update({ service_id: p.service_id, guest_phone: p.guest_phone })
+    .update({
+      service_id: p.service_id,
+      guest_phone: p.guest_phone,
+      scheduled_at: new Date(p.scheduled_at).toISOString(),
+      // Ao adiar, o agendamento volta para confirmação da equipe.
+      status: "pendente",
+    })
     .eq("id", id);
   if (error) throw error;
 }
+
+export async function cancelMyAppointment(id: string) {
+  const { error } = await supabase
+    .from("appointments")
+    .update({ status: "cancelado" })
+    .eq("id", id);
+  if (error) throw error;
+}
+
