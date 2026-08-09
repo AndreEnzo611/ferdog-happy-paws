@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, History } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/site-chrome";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -33,6 +33,11 @@ import {
   EDITABLE_STATUS,
   type MyProfileInput,
 } from "@/services/account";
+import {
+  listAppointmentHistory,
+  CHANGE_LABEL,
+  type ChangeType,
+} from "@/services/history";
 import { formatBRL, formatDuration, formatPhoneBR } from "@/lib/format";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -139,6 +144,7 @@ function AccountPage() {
       toast.success("Agendamento atualizado");
       setEditing(null);
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["appointment-history"] });
     },
     onError: (e: unknown) =>
       toast.error(e instanceof Error ? e.message : "Não foi possível salvar"),
@@ -150,9 +156,17 @@ function AccountPage() {
       toast.success("Agendamento cancelado");
       setEditing(null);
       queryClient.invalidateQueries({ queryKey: ["appointments"] });
+      queryClient.invalidateQueries({ queryKey: ["appointment-history"] });
     },
     onError: (e: unknown) =>
       toast.error(e instanceof Error ? e.message : "Não foi possível cancelar"),
+  });
+
+  const [historyFor, setHistoryFor] = useState<any | null>(null);
+  const { data: history, isLoading: loadingHistory } = useQuery({
+    queryKey: ["appointment-history", historyFor?.id],
+    queryFn: () => listAppointmentHistory(historyFor.id),
+    enabled: !!historyFor,
   });
 
   function openEdit(a: any) {
@@ -260,6 +274,13 @@ function AccountPage() {
                         <Badge variant="outline" className="capitalize">
                           {String(a.status).replace("_", " ")}
                         </Badge>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setHistoryFor(a)}
+                        >
+                          <History className="mr-1 h-4 w-4" /> Histórico
+                        </Button>
                         {canEdit && (
                           <Button size="sm" variant="outline" onClick={() => openEdit(a)}>
                             <Pencil className="mr-1 h-4 w-4" /> Editar
@@ -368,6 +389,53 @@ function AccountPage() {
                 {saveAppt.isPending ? "Salvando..." : "Salvar"}
               </Button>
             </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!historyFor} onOpenChange={(v) => !v && setHistoryFor(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Histórico de mudanças</DialogTitle>
+          </DialogHeader>
+          {loadingHistory ? (
+            <p className="text-sm text-muted-foreground">Carregando...</p>
+          ) : history && history.length > 0 ? (
+            <ol className="space-y-4">
+              {history.map((h) => (
+                <li key={h.id} className="border-l-2 border-primary/40 pl-4">
+                  <div className="font-medium">
+                    {CHANGE_LABEL[h.change_type as ChangeType] ?? h.change_type}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {new Date(h.created_at).toLocaleString("pt-BR")} ·{" "}
+                    {h.changed_by_name ?? "Equipe FerDog"}
+                  </div>
+                  {h.old_scheduled_at && h.new_scheduled_at && (
+                    <div className="mt-1 text-sm text-muted-foreground">
+                      {new Date(h.old_scheduled_at).toLocaleString("pt-BR")} →{" "}
+                      {new Date(h.new_scheduled_at).toLocaleString("pt-BR")}
+                    </div>
+                  )}
+                  {h.old_status && h.new_status && (
+                    <div className="mt-1 text-sm text-muted-foreground capitalize">
+                      {String(h.old_status).replace("_", " ")} →{" "}
+                      {String(h.new_status).replace("_", " ")}
+                    </div>
+                  )}
+                  {h.note && <div className="mt-1 text-sm">{h.note}</div>}
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Nenhuma mudança registrada neste agendamento.
+            </p>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHistoryFor(null)}>
+              Fechar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
