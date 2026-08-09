@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logAppointmentChange } from "./history";
 
 export type AppRole = "admin" | "staff" | "cliente";
 
@@ -39,9 +40,24 @@ export async function listAllAppointments(): Promise<AdminAppointment[]> {
 }
 
 export async function updateAppointmentStatus(id: string, status: string) {
+  const { data: before } = await supabase
+    .from("appointments")
+    .select("status")
+    .eq("id", id)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("appointments")
     .update({ status: status as never })
     .eq("id", id);
   if (error) throw error;
+
+  await logAppointmentChange([
+    {
+      appointment_id: id,
+      change_type: status === "cancelado" ? "cancelado" : "status_alterado",
+      old_status: before?.status ?? null,
+      new_status: status,
+    },
+  ]);
 }
