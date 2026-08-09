@@ -134,6 +134,5 @@ export async function cancelMyAppointment(id: string, reason?: string) {
       note: parsedReason ? parsedReason : null,
     },
   ]);
-  ]);
 }
 
