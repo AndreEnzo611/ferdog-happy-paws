@@ -58,24 +58,67 @@ export type MyAppointmentInput = z.infer<typeof myAppointmentSchema>;
 
 export async function updateMyAppointment(id: string, input: MyAppointmentInput) {
   const p = myAppointmentSchema.parse(input);
+
+  const { data: before } = await supabase
+    .from("appointments")
+    .select("scheduled_at, status, service_id, guest_phone")
+    .eq("id", id)
+    .maybeSingle();
+
+  const newScheduled = new Date(p.scheduled_at).toISOString();
   const { error } = await supabase
     .from("appointments")
     .update({
       service_id: p.service_id,
       guest_phone: p.guest_phone,
-      scheduled_at: new Date(p.scheduled_at).toISOString(),
+      scheduled_at: newScheduled,
       // Ao adiar, o agendamento volta para confirmação da equipe.
       status: "pendente",
     })
     .eq("id", id);
   if (error) throw error;
+
+  const entries: Parameters<typeof logAppointmentChange>[0] = [];
+  if (before && before.scheduled_at !== newScheduled) {
+    entries.push({
+      appointment_id: id,
+      change_type: "adiado",
+      old_scheduled_at: before.scheduled_at,
+      new_scheduled_at: newScheduled,
+      old_status: before.status,
+      new_status: "pendente",
+    });
+  }
+  if (before && before.service_id !== p.service_id) {
+    entries.push({ appointment_id: id, change_type: "servico_alterado" });
+  }
+  if (before && (before.guest_phone ?? "") !== p.guest_phone) {
+    entries.push({ appointment_id: id, change_type: "contato_alterado" });
+  }
+  await logAppointmentChange(entries);
 }
 
 export async function cancelMyAppointment(id: string) {
+  const { data: before } = await supabase
+    .from("appointments")
+    .select("status, scheduled_at")
+    .eq("id", id)
+    .maybeSingle();
+
   const { error } = await supabase
     .from("appointments")
     .update({ status: "cancelado" })
     .eq("id", id);
   if (error) throw error;
+
+  await logAppointmentChange([
+    {
+      appointment_id: id,
+      change_type: "cancelado",
+      old_status: before?.status ?? null,
+      new_status: "cancelado",
+      old_scheduled_at: before?.scheduled_at ?? null,
+    },
+  ]);
 }
 
