@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_history: {
+        Row: {
+          appointment_id: string
+          change_type: Database["public"]["Enums"]["appointment_change_type"]
+          changed_by: string | null
+          changed_by_name: string | null
+          created_at: string
+          id: string
+          new_scheduled_at: string | null
+          new_status: Database["public"]["Enums"]["appointment_status"] | null
+          note: string | null
+          old_scheduled_at: string | null
+          old_status: Database["public"]["Enums"]["appointment_status"] | null
+        }
+        Insert: {
+          appointment_id: string
+          change_type: Database["public"]["Enums"]["appointment_change_type"]
+          changed_by?: string | null
+          changed_by_name?: string | null
+          created_at?: string
+          id?: string
+          new_scheduled_at?: string | null
+          new_status?: Database["public"]["Enums"]["appointment_status"] | null
+          note?: string | null
+          old_scheduled_at?: string | null
+          old_status?: Database["public"]["Enums"]["appointment_status"] | null
+        }
+        Update: {
+          appointment_id?: string
+          change_type?: Database["public"]["Enums"]["appointment_change_type"]
+          changed_by?: string | null
+          changed_by_name?: string | null
+          created_at?: string
+          id?: string
+          new_scheduled_at?: string | null
+          new_status?: Database["public"]["Enums"]["appointment_status"] | null
+          note?: string | null
+          old_scheduled_at?: string | null
+          old_status?: Database["public"]["Enums"]["appointment_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_history_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointments: {
         Row: {
           created_at: string
@@ -209,6 +259,13 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "staff" | "cliente"
+      appointment_change_type:
+        | "criado"
+        | "adiado"
+        | "cancelado"
+        | "servico_alterado"
+        | "status_alterado"
+        | "contato_alterado"
       appointment_status:
         | "pendente"
         | "confirmado"
@@ -344,6 +401,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "staff", "cliente"],
+      appointment_change_type: [
+        "criado",
+        "adiado",
+        "cancelado",
+        "servico_alterado",
+        "status_alterado",
+        "contato_alterado",
+      ],
       appointment_status: [
         "pendente",
         "confirmado",
