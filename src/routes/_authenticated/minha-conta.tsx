@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -127,6 +128,7 @@ function AccountPage() {
     guest_phone: "",
     date: "",
     time: "",
+    reason: "",
   });
 
   const saveAppt = useMutation({
@@ -138,6 +140,7 @@ function AccountPage() {
         service_id: apptForm.service_id,
         guest_phone: apptForm.guest_phone,
         scheduled_at: `${apptForm.date}T${apptForm.time}:00`,
+        reason: apptForm.reason,
       });
     },
     onSuccess: () => {
@@ -151,7 +154,7 @@ function AccountPage() {
   });
 
   const cancelAppt = useMutation({
-    mutationFn: (id: string) => cancelMyAppointment(id),
+    mutationFn: (id: string) => cancelMyAppointment(id, apptForm.reason),
     onSuccess: () => {
       toast.success("Agendamento cancelado");
       setEditing(null);
@@ -178,6 +181,7 @@ function AccountPage() {
       guest_phone: a.guest_phone ?? profile?.phone ?? "",
       date: `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}`,
       time: `${pad(dt.getHours())}:${pad(dt.getMinutes())}`,
+      reason: "",
     });
   }
 
@@ -367,6 +371,20 @@ function AccountPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="ap-reason">Motivo / observação (opcional)</Label>
+              <Textarea
+                id="ap-reason"
+                rows={3}
+                maxLength={300}
+                placeholder="Ex.: preciso adiar por causa do trabalho"
+                value={apptForm.reason}
+                onChange={(e) => setApptForm({ ...apptForm, reason: e.target.value })}
+              />
+              <p className="text-xs text-muted-foreground">
+                {apptForm.reason.length}/300 — o motivo fica registrado no histórico.
+              </p>
             </div>
             <p className="text-xs text-muted-foreground">
               Ao adiar, o agendamento volta para “pendente” até a equipe confirmar.
