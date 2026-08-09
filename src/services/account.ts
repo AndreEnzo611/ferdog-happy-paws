@@ -53,12 +53,21 @@ export const myAppointmentSchema = z.object({
   service_id: z.string().uuid("Escolha o serviço"),
   guest_phone: z.string().trim().min(8, "Telefone inválido").max(20, "Telefone inválido"),
   scheduled_at: z.string().min(1, "Escolha data e hora"),
+  reason: z.string().trim().max(300, "Máximo de 300 caracteres").optional().or(z.literal("")),
 });
 
 export type MyAppointmentInput = z.infer<typeof myAppointmentSchema>;
 
+const reasonSchema = z
+  .string()
+  .trim()
+  .max(300, "Máximo de 300 caracteres")
+  .optional()
+  .or(z.literal(""));
+
 export async function updateMyAppointment(id: string, input: MyAppointmentInput) {
   const p = myAppointmentSchema.parse(input);
+  const note = p.reason ? p.reason : null;
 
   const { data: before } = await supabase
     .from("appointments")
@@ -88,18 +97,21 @@ export async function updateMyAppointment(id: string, input: MyAppointmentInput)
       new_scheduled_at: newScheduled,
       old_status: before.status,
       new_status: "pendente",
+      note,
     });
   }
   if (before && before.service_id !== p.service_id) {
-    entries.push({ appointment_id: id, change_type: "servico_alterado" });
+    entries.push({ appointment_id: id, change_type: "servico_alterado", note });
   }
   if (before && (before.guest_phone ?? "") !== p.guest_phone) {
-    entries.push({ appointment_id: id, change_type: "contato_alterado" });
+    entries.push({ appointment_id: id, change_type: "contato_alterado", note });
   }
   await logAppointmentChange(entries);
 }
 
-export async function cancelMyAppointment(id: string) {
+export async function cancelMyAppointment(id: string, reason?: string) {
+  const parsedReason = reasonSchema.parse(reason ?? "");
+
   const { data: before } = await supabase
     .from("appointments")
     .select("status, scheduled_at")
@@ -119,7 +131,9 @@ export async function cancelMyAppointment(id: string) {
       old_status: before?.status ?? null,
       new_status: "cancelado",
       old_scheduled_at: before?.scheduled_at ?? null,
+      note: parsedReason ? parsedReason : null,
     },
+  ]);
   ]);
 }
 
