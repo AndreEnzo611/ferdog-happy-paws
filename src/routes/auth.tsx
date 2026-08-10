@@ -155,8 +155,25 @@ function AuthPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="su-phone">Telefone / WhatsApp</Label>
-                    <Input id="su-phone" name="phone" required />
+                    <Input
+                      id="su-phone"
+                      name="phone"
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel"
+                      placeholder="(44) 99999-9999"
+                      value={phone}
+                      onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
+                      aria-invalid={phone.length > 0 && !phoneValido}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {phone.length > 0 && !phoneValido
+                        ? "Informe DDD + número (10 ou 11 dígitos)."
+                        : "Use DDD + número, ex.: (44) 99999-9999"}
+                    </p>
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="su-email">Email</Label>
                     <Input id="su-email" name="email" type="email" required />
