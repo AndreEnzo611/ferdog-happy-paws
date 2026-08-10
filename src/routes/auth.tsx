@@ -52,12 +52,17 @@ function AuthPage() {
   async function handleSignUp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    if (!phoneValido) {
+      setInfo("Informe um WhatsApp válido com DDD, ex.: (44) 99999-9999");
+      toast.error("Telefone / WhatsApp inválido");
+      return;
+    }
     setBusy(true);
     setInfo(null);
     try {
       const { needsEmailConfirmation } = await signUp({
         full_name: String(fd.get("full_name") ?? ""),
-        phone: String(fd.get("phone") ?? ""),
+        phone,
         email: String(fd.get("email") ?? ""),
         password: String(fd.get("password") ?? ""),
       });
