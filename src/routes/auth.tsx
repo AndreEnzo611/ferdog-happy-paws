@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { signIn, signUp, signInWithGoogle, requestPasswordReset } from "@/services/auth";
+import { formatPhoneBR } from "@/lib/format";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
