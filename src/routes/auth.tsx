@@ -223,7 +223,20 @@ function AuthPage() {
                     <Label htmlFor="su-pass">Senha</Label>
                     <Input id="su-pass" name="password" type="password" minLength={6} required />
                   </div>
+                  {info && (
+                    <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">{info}</p>
+                  )}
                   <Button type="submit" className="w-full" disabled={busy}>Criar conta</Button>
+                  {pendingEmail && (
+                    <button
+                      type="button"
+                      className="w-full text-xs text-primary underline"
+                      disabled={busy}
+                      onClick={() => handleResend(pendingEmail)}
+                    >
+                      Não recebeu? Reenviar email de confirmação
+                    </button>
+                  )}
                 </form>
               </TabsContent>
             </Tabs>
