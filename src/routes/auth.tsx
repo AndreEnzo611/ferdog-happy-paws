@@ -45,11 +45,13 @@ function AuthPage() {
   async function handleSignIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    const email = String(fd.get("email") ?? "").trim();
     setBusy(true);
     setInfo(null);
+    setPendingEmail(null);
     try {
       await signIn({
-        email: String(fd.get("email") ?? ""),
+        email,
         password: String(fd.get("password") ?? ""),
       });
       toast.success("Bem-vindo de volta!");
@@ -57,6 +59,7 @@ function AuthPage() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Não foi possível entrar";
       setInfo(msg);
+      if (msg.toLowerCase().includes("confirme seu email")) setPendingEmail(email);
       toast.error(msg);
     } finally {
       setBusy(false);
