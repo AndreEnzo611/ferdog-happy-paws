@@ -74,17 +74,22 @@ function AuthPage() {
       toast.error("Telefone / WhatsApp inválido");
       return;
     }
+    const email = String(fd.get("email") ?? "").trim();
     setBusy(true);
     setInfo(null);
+    setPendingEmail(null);
     try {
       const { needsEmailConfirmation } = await signUp({
         full_name: String(fd.get("full_name") ?? ""),
         phone,
-        email: String(fd.get("email") ?? ""),
+        email,
         password: String(fd.get("password") ?? ""),
       });
       if (needsEmailConfirmation) {
-        setInfo("Conta criada! Confirme seu email pelo link que enviamos e depois faça login.");
+        setPendingEmail(email);
+        setInfo(
+          `Conta criada! Enviamos um link de confirmação para ${email}. Abra o link (verifique também a caixa de spam) e depois faça login.`,
+        );
         toast.success("Verifique seu email para confirmar a conta.");
       } else {
         toast.success("Conta criada! Você já está conectado.");
