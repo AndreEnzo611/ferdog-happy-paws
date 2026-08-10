@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { signIn, signUp, signInWithGoogle, requestPasswordReset } from "@/services/auth";
+import { formatPhoneBR } from "@/lib/format";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -23,6 +24,9 @@ function AuthPage() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
+  const [phone, setPhone] = useState("");
+  const phoneDigits = phone.replace(/\D/g, "");
+  const phoneValido = phoneDigits.length >= 10 && phoneDigits.length <= 11;
 
   async function handleSignIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -48,12 +52,17 @@ function AuthPage() {
   async function handleSignUp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    if (!phoneValido) {
+      setInfo("Informe um WhatsApp válido com DDD, ex.: (44) 99999-9999");
+      toast.error("Telefone / WhatsApp inválido");
+      return;
+    }
     setBusy(true);
     setInfo(null);
     try {
       const { needsEmailConfirmation } = await signUp({
         full_name: String(fd.get("full_name") ?? ""),
-        phone: String(fd.get("phone") ?? ""),
+        phone,
         email: String(fd.get("email") ?? ""),
         password: String(fd.get("password") ?? ""),
       });
@@ -155,8 +164,25 @@ function AuthPage() {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="su-phone">Telefone / WhatsApp</Label>
-                    <Input id="su-phone" name="phone" required />
+                    <Input
+                      id="su-phone"
+                      name="phone"
+                      type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel"
+                      placeholder="(44) 99999-9999"
+                      value={phone}
+                      onChange={(e) => setPhone(formatPhoneBR(e.target.value))}
+                      aria-invalid={phone.length > 0 && !phoneValido}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {phone.length > 0 && !phoneValido
+                        ? "Informe DDD + número (10 ou 11 dígitos)."
+                        : "Use DDD + número, ex.: (44) 99999-9999"}
+                    </p>
                   </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="su-email">Email</Label>
                     <Input id="su-email" name="email" type="email" required />
