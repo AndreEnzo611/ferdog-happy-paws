@@ -24,9 +24,23 @@ function AuthPage() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
   const phoneDigits = phone.replace(/\D/g, "");
   const phoneValido = phoneDigits.length >= 10 && phoneDigits.length <= 11;
+
+  async function handleResend(email: string) {
+    setBusy(true);
+    try {
+      await resendConfirmation(email);
+      toast.success("Novo email de confirmação enviado!");
+      setInfo(`Reenviamos o link de confirmação para ${email}. Verifique também a caixa de spam.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível reenviar");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function handleSignIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
