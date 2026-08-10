@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { signIn, signUp, signInWithGoogle, requestPasswordReset } from "@/services/auth";
+import { signIn, signUp, signInWithGoogle, requestPasswordReset, resendConfirmation } from "@/services/auth";
 import { formatPhoneBR } from "@/lib/format";
 
 export const Route = createFileRoute("/auth")({
@@ -24,18 +24,34 @@ function AuthPage() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
   const phoneDigits = phone.replace(/\D/g, "");
   const phoneValido = phoneDigits.length >= 10 && phoneDigits.length <= 11;
 
+  async function handleResend(email: string) {
+    setBusy(true);
+    try {
+      await resendConfirmation(email);
+      toast.success("Novo email de confirmação enviado!");
+      setInfo(`Reenviamos o link de confirmação para ${email}. Verifique também a caixa de spam.`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Não foi possível reenviar");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleSignIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    const email = String(fd.get("email") ?? "").trim();
     setBusy(true);
     setInfo(null);
+    setPendingEmail(null);
     try {
       await signIn({
-        email: String(fd.get("email") ?? ""),
+        email,
         password: String(fd.get("password") ?? ""),
       });
       toast.success("Bem-vindo de volta!");
@@ -43,6 +59,7 @@ function AuthPage() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Não foi possível entrar";
       setInfo(msg);
+      if (msg.toLowerCase().includes("confirme seu email")) setPendingEmail(email);
       toast.error(msg);
     } finally {
       setBusy(false);
@@ -57,17 +74,22 @@ function AuthPage() {
       toast.error("Telefone / WhatsApp inválido");
       return;
     }
+    const email = String(fd.get("email") ?? "").trim();
     setBusy(true);
     setInfo(null);
+    setPendingEmail(null);
     try {
       const { needsEmailConfirmation } = await signUp({
         full_name: String(fd.get("full_name") ?? ""),
         phone,
-        email: String(fd.get("email") ?? ""),
+        email,
         password: String(fd.get("password") ?? ""),
       });
       if (needsEmailConfirmation) {
-        setInfo("Conta criada! Confirme seu email pelo link que enviamos e depois faça login.");
+        setPendingEmail(email);
+        setInfo(
+          `Conta criada! Enviamos um link de confirmação para ${email}. Abra o link (verifique também a caixa de spam) e depois faça login.`,
+        );
         toast.success("Verifique seu email para confirmar a conta.");
       } else {
         toast.success("Conta criada! Você já está conectado.");
@@ -140,6 +162,16 @@ function AuthPage() {
                   {info && (
                     <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">{info}</p>
                   )}
+                  {pendingEmail && (
+                    <button
+                      type="button"
+                      className="w-full text-xs text-primary underline"
+                      disabled={busy}
+                      onClick={() => handleResend(pendingEmail)}
+                    >
+                      Reenviar email de confirmação
+                    </button>
+                  )}
                   <Button type="submit" className="w-full" disabled={busy}>Entrar</Button>
                   <button
                     type="button"
@@ -191,7 +223,20 @@ function AuthPage() {
                     <Label htmlFor="su-pass">Senha</Label>
                     <Input id="su-pass" name="password" type="password" minLength={6} required />
                   </div>
+                  {info && (
+                    <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">{info}</p>
+                  )}
                   <Button type="submit" className="w-full" disabled={busy}>Criar conta</Button>
+                  {pendingEmail && (
+                    <button
+                      type="button"
+                      className="w-full text-xs text-primary underline"
+                      disabled={busy}
+                      onClick={() => handleResend(pendingEmail)}
+                    >
+                      Não recebeu? Reenviar email de confirmação
+                    </button>
+                  )}
                 </form>
               </TabsContent>
             </Tabs>

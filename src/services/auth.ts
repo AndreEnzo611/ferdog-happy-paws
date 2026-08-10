@@ -47,6 +47,16 @@ export async function signIn(input: SignInInput) {
   if (error) throw new Error(traduzErro(error.message));
 }
 
+export async function resendConfirmation(email: string) {
+  const parsed = z.string().trim().email("Email inválido").parse(email);
+  const { error } = await supabase.auth.resend({
+    type: "signup",
+    email: parsed,
+    options: { emailRedirectTo: `${window.location.origin}/` },
+  });
+  if (error) throw new Error(traduzErro(error.message));
+}
+
 export async function requestPasswordReset(email: string) {
   const parsed = z.string().trim().email("Email inválido").parse(email);
   const { error } = await supabase.auth.resetPasswordForEmail(parsed, {
