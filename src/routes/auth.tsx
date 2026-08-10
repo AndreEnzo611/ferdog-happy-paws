@@ -162,6 +162,16 @@ function AuthPage() {
                   {info && (
                     <p className="rounded-md bg-muted p-3 text-xs text-muted-foreground">{info}</p>
                   )}
+                  {pendingEmail && (
+                    <button
+                      type="button"
+                      className="w-full text-xs text-primary underline"
+                      disabled={busy}
+                      onClick={() => handleResend(pendingEmail)}
+                    >
+                      Reenviar email de confirmação
+                    </button>
+                  )}
                   <Button type="submit" className="w-full" disabled={busy}>Entrar</Button>
                   <button
                     type="button"
