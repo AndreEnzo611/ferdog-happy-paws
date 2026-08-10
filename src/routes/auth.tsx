@@ -24,6 +24,9 @@ function AuthPage() {
   const navigate = useNavigate();
   const [busy, setBusy] = useState(false);
   const [info, setInfo] = useState<string | null>(null);
+  const [phone, setPhone] = useState("");
+  const phoneDigits = phone.replace(/\D/g, "");
+  const phoneValido = phoneDigits.length >= 10 && phoneDigits.length <= 11;
 
   async function handleSignIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
