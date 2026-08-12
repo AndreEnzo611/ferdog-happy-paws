@@ -69,7 +69,7 @@ function ResetPasswordPage() {
               </Button>
             </form>
             <p className="mt-4 text-xs text-muted-foreground">
-              Abra esta página pelo link enviado no seu email para poder alterar a senha.
+              Abra esta página pelo link enviado no seu email para poder alterar a senha. Se não encontrar o email, verifique a caixa de spam.
             </p>
           </CardContent>
         </Card>
