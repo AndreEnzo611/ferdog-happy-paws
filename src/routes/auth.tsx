@@ -112,7 +112,7 @@ function AuthPage() {
     setBusy(true);
     try {
       await requestPasswordReset(email);
-      setInfo("Enviamos um link de redefinição de senha para o seu email.");
+      setInfo("Enviamos um link de redefinição de senha para o seu email. Verifique também a caixa de spam.");
       toast.success("Link de redefinição enviado!");
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Não foi possível enviar o link");
